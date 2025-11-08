@@ -11,7 +11,7 @@ const PUERTO = process.env.PUERTO || 5000;
 
 // Middleware CORS configurado correctamente
 app.use(cors({
-  origin: 'http://localhost:3000', // Ajusta según tu puerto del frontend
+  origin: 'http://localhost:3000',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -19,7 +19,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rutas
+// Rutas (se mantienen igual)
 app.use('/api/autenticacion', require('./rutas/RutaAutenticacion'));
 app.use('/api/productos', require('./rutas/RutaProducto'));
 app.use('/api/inventario', require('./rutas/RutaInventario'));
@@ -58,18 +58,18 @@ app.get('/', (req, res) => {
       unidadesmedidas: '/api/unidadesmedidas',
       caja: '/api/caja',
       reportes: '/api/reportes',
-
     }
   });
 });
 
-// Probar conexión a base de datos
-db.connect((err) => {
+// Probar conexión a base de datos (ADAPTADO PARA POOL)
+db.getConnection((err, connection) => {
   if (err) {
     console.error('Error conectando a la base de datos:', err);
     return;
   }
   console.log('Conectado a la base de datos MySQL');
+  connection.release(); // Liberar la conexión de prueba
 });
 
 // Manejo de rutas no encontradas

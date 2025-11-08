@@ -1,4 +1,4 @@
-const db = require('../config/BaseDatos');
+const db = require('../config/DBAdapter'); 
 
 const ModeloProducto = {
  
