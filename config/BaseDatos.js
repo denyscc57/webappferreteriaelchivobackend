@@ -13,15 +13,23 @@ function getDBConfig() {
     user: process.env.MYSQLUSER || 'root',
     password: process.env.MYSQLPASSWORD || '',
     database: process.env.MYSQLDATABASE || 'ferreteriaelchivo',
-    connectTimeout: 60000,
-    acquireTimeout: 60000,
-    timeout: 60000,
     ssl: process.env.MYSQL_SSL ? { rejectUnauthorized: false } : undefined
   };
 }
 
-// Crear pool en lugar de conexión única
-const pool = mysql.createPool(getDBConfig());
+// Configuración del pool (las opciones de timeout van aquí)
+const poolConfig = {
+  ...getDBConfig(),
+  // Opciones específicas del POOL (no de la conexión)
+  acquireTimeout: 60000,
+  timeout: 60000,
+  connectionLimit: 10,
+  queueLimit: 0,
+  waitForConnections: true
+};
+
+// Crear pool con configuración correcta
+const pool = mysql.createPool(poolConfig);
 
 // Probar la conexión
 pool.getConnection((err, connection) => {
@@ -38,6 +46,15 @@ pool.getConnection((err, connection) => {
 // Manejar errores del pool
 pool.on('error', (err) => {
   console.error('Error de MySQL Pool:', err.message);
+});
+
+// Manejar eventos del pool para debugging
+pool.on('acquire', (connection) => {
+  console.log('Conexión adquirida del pool');
+});
+
+pool.on('release', (connection) => {
+  console.log('Conexión liberada al pool');
 });
 
 module.exports = pool;
