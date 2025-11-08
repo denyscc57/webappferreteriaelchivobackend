@@ -12,9 +12,11 @@ function getDBConfig() {
     port: process.env.MYSQLPORT || 3306,
     user: process.env.MYSQLUSER || 'root',
     password: process.env.MYSQLPASSWORD || '',
-    database: process.env.MYSQLDATABASE || 'ferreteriaelchivo',
+    database: process.env.MYSQLDATABASE || 'railway',
     connectTimeout: 60000,
-    ssl: process.env.MYSQL_SSL ? { rejectUnauthorized: false } : undefined
+    acquireTimeout: 60000,
+    timeout: 60000,
+    ssl: { rejectUnauthorized: false } // Importante para Railway
   };
 }
 
