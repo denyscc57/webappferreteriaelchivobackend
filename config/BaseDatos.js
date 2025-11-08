@@ -7,27 +7,31 @@ function getConnectionConfig() {
   }
   
   console.log('Usando variables individuales para la conexión');
-  return {
+  const config = {
     host: process.env.MYSQLHOST || 'localhost',
     port: process.env.MYSQLPORT || 3306,
     user: process.env.MYSQLUSER || 'root',
     password: process.env.MYSQLPASSWORD || '',
     database: process.env.MYSQLDATABASE || 'ferreteriaelchivo',
-    ssl: process.env.MYSQL_SSL ? { rejectUnauthorized: false } : undefined,
     charset: 'utf8mb4',
-    timezone: 'local'
+    timezone: 'local',
+    // Solo configuraciones válidas para conexiones
+    connectTimeout: 60000
   };
+
+  // SSL configuration
+  if (process.env.MYSQL_SSL === 'true') {
+    config.ssl = { rejectUnauthorized: false };
+  }
+
+  return config;
 }
 
-// Configuración base de la conexión
-const connectionConfig = getConnectionConfig();
-
-// Configuración del POOL (separada)
-const poolConfig = {
-  ...connectionConfig,
-  // Opciones específicas del POOL
+// Crear pool con configuración limpia
+const pool = mysql.createPool({
+  ...getConnectionConfig(),
+  // Configuraciones específicas del pool (no se pasan a conexiones individuales)
   acquireTimeout: 60000,
-  connectTimeout: 60000,
   idleTimeout: 60000,
   connectionLimit: 10,
   queueLimit: 0,
@@ -35,42 +39,25 @@ const poolConfig = {
   maxIdle: 10,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0
-};
+});
 
-// Crear pool con promesas
-const pool = mysql.createPool(poolConfig);
-
-// Función para probar conexión
+// Probar conexión al iniciar
 const testConnection = async () => {
   try {
     const connection = await pool.getConnection();
     console.log('Conectado a MySQL exitosamente');
-    console.log(`Base de datos: ${connectionConfig.database}`);
-    console.log(`Host: ${connectionConfig.host}:${connectionConfig.port}`);
+    
+    // Verificar la base de datos
+    const [rows] = await connection.execute('SELECT DATABASE() as db_name');
+    console.log(`Base de datos conectada: ${rows[0].db_name}`);
+    
     connection.release();
-    return true;
   } catch (err) {
     console.error('Error conectando a MySQL:', err.message);
-    console.log(' Código:', err.code);
-    console.log(' Verifica las credenciales y la conexión a la base de datos');
-    return false;
+    console.log('Solución: Verifica las variables de entorno MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE');
   }
 };
 
-// Probar conexión al iniciar
 testConnection();
-
-// Manejar eventos del pool
-pool.on('acquire', (connection) => {
-  console.log('Conexión adquirida del pool');
-});
-
-pool.on('release', (connection) => {
-  console.log(' Conexión liberada al pool');
-});
-
-pool.on('error', (err) => {
-  console.error('Error de MySQL Pool:', err.message);
-});
 
 module.exports = pool;
