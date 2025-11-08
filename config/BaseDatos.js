@@ -14,9 +14,7 @@ function getDBConfig() {
     password: process.env.MYSQLPASSWORD || '',
     database: process.env.MYSQLDATABASE || 'ferreteriaelchivo',
     connectTimeout: 60000,
-    acquireTimeout: 60000,
-    timeout: 60000,
-    ssl: { rejectUnauthorized: false } // Importante para Railway
+    ssl: process.env.MYSQL_SSL ? { rejectUnauthorized: false } : undefined
   };
 }
 
