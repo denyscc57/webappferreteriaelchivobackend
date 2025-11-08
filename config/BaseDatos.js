@@ -12,10 +12,11 @@ function getDBConfig() {
     port: process.env.MYSQLPORT || 3306,
     user: process.env.MYSQLUSER || 'root',
     password: process.env.MYSQLPASSWORD || '',
-    database: process.env.MYSQLDATABASE || 'ferreteriaelchivo',
+    database: process.env.MYSQLDATABASE || 'railway',
     connectTimeout: 60000,
-    // REMOVER SSL ya que el servidor no lo soporta
-    ssl: false
+    acquireTimeout: 60000,
+    timeout: 60000,
+    ssl: { rejectUnauthorized: false } // Importante para Railway
   };
 }
 
@@ -36,7 +37,6 @@ function connectToMySQL(retries = 5, delay = 5000) {
       }
     } else {
       console.log('Conectado a MySQL exitosamente');
-      console.log('Frontend en: http://localhost:3000');
     }
   });
 }
