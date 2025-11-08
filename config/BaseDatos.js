@@ -1,4 +1,4 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 
 function getConnectionConfig() {
   if (process.env.MYSQL_URL) {
@@ -15,40 +15,40 @@ function getConnectionConfig() {
     database: process.env.MYSQLDATABASE || 'ferreteriaelchivo',
     ssl: process.env.MYSQL_SSL ? { rejectUnauthorized: false } : undefined,
     charset: 'utf8mb4',
-    timezone: 'local'
+    timezone: 'local',
+    // Configuraciones del pool
+    acquireTimeout: 60000,
+    connectTimeout: 60000,
+    timeout: 60000,
+    connectionLimit: 10,
+    queueLimit: 0,
+    waitForConnections: true,
+    maxIdle: 10,
+    idleTimeout: 60000,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0
   };
 }
 
-// Configuración del POOL separada de la conexión
-const poolConfig = {
-  ...getConnectionConfig(),
-  // Opciones específicas del POOL (no se pasan a la conexión)
-  acquireTimeout: 60000,
-  connectTimeout: 60000,
-  timeout: 60000,
-  connectionLimit: 10,
-  queueLimit: 0,
-  waitForConnections: true,
-  maxIdle: 10,
-  idleTimeout: 60000,
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 0
-};
+// Crear pool con promesas
+const pool = mysql.createPool(getConnectionConfig());
 
-// Crear pool
-const pool = mysql.createPool(poolConfig);
-
-// Probar la conexión
-pool.getConnection((err, connection) => {
-  if (err) {
-    console.error('Error conectando a MySQL:', err.message);
-    console.log('Código:', err.code);
-    process.exit(1);
-  } else {
+// Función para probar conexión (opcional, para mantener compatibilidad)
+const testConnection = async () => {
+  try {
+    const connection = await pool.getConnection();
     console.log('Conectado a MySQL exitosamente');
     connection.release();
+    return true;
+  } catch (err) {
+    console.error('Error conectando a MySQL:', err.message);
+    console.log('Código:', err.code);
+    return false;
   }
-});
+};
+
+// Probar conexión al iniciar
+testConnection();
 
 // Manejar errores del pool
 pool.on('error', (err) => {

@@ -62,15 +62,15 @@ app.get('/', (req, res) => {
   });
 });
 
-// Probar conexión a base de datos (ADAPTADO PARA POOL)
-db.getConnection((err, connection) => {
-  if (err) {
+// Probar conexión a base de datos (USANDO PROMESAS)
+db.getConnection()
+  .then(connection => {
+    console.log('Conectado a la base de datos MySQL');
+    connection.release();
+  })
+  .catch(err => {
     console.error('Error conectando a la base de datos:', err);
-    return;
-  }
-  console.log('Conectado a la base de datos MySQL');
-  connection.release(); // Liberar la conexión de prueba
-});
+  });
 
 // Manejo de rutas no encontradas
 app.use((req, res, next) => {

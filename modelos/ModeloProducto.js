@@ -1,15 +1,14 @@
-const db = require('../config/DBAdapter'); 
+const db = require('../config/DBAdapter');
 
-const ModeloProducto = {
- 
-  crear: (nuevoProducto, callback) => {
+const ModeloProductoPromises = {
+  crear: (nuevoProducto) => {
     const query = `
       INSERT INTO producto 
       (p_codigo, p_nombre, p_categoria, p_loteFK, p_marca, p_precio, p_stock, p_fecha_vencimiento, p_proveedorFK, p_unidadmedidaFK) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     
-    db.query(query, [
+    return db.execute(query, [
       nuevoProducto.codigo,
       nuevoProducto.nombre,
       nuevoProducto.categoria,
@@ -20,25 +19,24 @@ const ModeloProducto = {
       nuevoProducto.fecha_vencimiento,
       nuevoProducto.proveedorFK,
       nuevoProducto.unidadmedidaFK
-    ], callback);
+    ]);
   },
 
- obtenerTodos: (callback) => {
-  const query = `
-    SELECT p.*, l.l_nombre as lote_nombre, 
-           CONCAT(pr.pr_nombres, ' ', pr.pr_apellidos) as proveedor_nombre,
-           um.m_unidad as unidad_medida
-    FROM producto p
-    LEFT JOIN lote l ON p.p_loteFK = l.l_id
-    LEFT JOIN proveedor pr ON p.p_proveedorFK = pr.pr_id
-    LEFT JOIN unidadmedida um ON p.p_unidadmedidaFK = um.m_id
-    ORDER BY p.p_codigo ASC
-  `;
-  db.query(query, callback);
-},
+  obtenerTodos: () => {
+    const query = `
+      SELECT p.*, l.l_nombre as lote_nombre, 
+             CONCAT(pr.pr_nombres, ' ', pr.pr_apellidos) as proveedor_nombre,
+             um.m_unidad as unidad_medida
+      FROM producto p
+      LEFT JOIN lote l ON p.p_loteFK = l.l_id
+      LEFT JOIN proveedor pr ON p.p_proveedorFK = pr.pr_id
+      LEFT JOIN unidadmedida um ON p.p_unidadmedidaFK = um.m_id
+      ORDER BY p.p_codigo ASC
+    `;
+    return db.execute(query);
+  },
 
-  // Obtener producto por ID
-  obtenerPorId: (id, callback) => {
+  obtenerPorId: (id) => {
     const query = `
       SELECT p.*, l.l_nombre as lote_nombre, 
              CONCAT(pr.pr_nombres, ' ', pr.pr_apellidos) as proveedor_nombre,
@@ -49,11 +47,10 @@ const ModeloProducto = {
       LEFT JOIN unidadmedida um ON p.p_unidadmedidaFK = um.m_id
       WHERE p.p_id = ?
     `;
-    db.query(query, [id], callback);
+    return db.execute(query, [id]);
   },
 
-  // Actualizar producto
-  actualizar: (id, producto, callback) => {
+  actualizar: (id, producto) => {
     const query = `
       UPDATE producto 
       SET p_codigo=?, p_nombre=?, p_categoria=?, p_loteFK=?, p_marca=?, 
@@ -61,7 +58,7 @@ const ModeloProducto = {
       WHERE p_id=?
     `;
     
-    db.query(query, [
+    return db.execute(query, [
       producto.codigo,
       producto.nombre,
       producto.categoria,
@@ -73,24 +70,20 @@ const ModeloProducto = {
       producto.proveedorFK,
       producto.unidadmedidaFK,
       id
-    ], callback);
+    ]);
   },
-  // Obtener producto por código
-  obtenerPorCodigo: (codigo, callback) => {
+
+  obtenerPorCodigo: (codigo) => {
     const query = 'SELECT * FROM producto WHERE p_codigo = ?';
-    db.query(query, [codigo], callback);
+    return db.execute(query, [codigo]);
   },
 
-  
-
-  // Eliminar producto
-  eliminar: (id, callback) => {
+  eliminar: (id) => {
     const query = 'DELETE FROM producto WHERE p_id = ?';
-    db.query(query, [id], callback);
+    return db.execute(query, [id]);
   },
 
-  // Verificar si código de producto ya existe
-  verificarCodigoExistente: (codigo, excludeId = null, callback) => {
+  verificarCodigoExistente: (codigo, excludeId = null) => {
     let query = 'SELECT COUNT(*) as count FROM producto WHERE p_codigo = ?';
     let params = [codigo];
     
@@ -99,11 +92,10 @@ const ModeloProducto = {
       params.push(excludeId);
     }
     
-    db.query(query, params, callback);
+    return db.execute(query, params);
   },
 
-  // Buscar productos por nombre o código
-  buscar: (termino, callback) => {
+  buscar: (termino) => {
     const query = `
       SELECT p.*, l.l_nombre as lote_nombre, 
              CONCAT(pr.pr_nombres, ' ', pr.pr_apellidos) as proveedor_nombre
@@ -114,11 +106,10 @@ const ModeloProducto = {
       ORDER BY p.p_nombre
     `;
     const terminoBusqueda = `%${termino}%`;
-    db.query(query, [terminoBusqueda, terminoBusqueda], callback);
+    return db.execute(query, [terminoBusqueda, terminoBusqueda]);
   },
 
-  // Obtener productos por categoría
-  obtenerPorCategoria: (categoria, callback) => {
+  obtenerPorCategoria: (categoria) => {
     const query = `
       SELECT p.*, l.l_nombre as lote_nombre, 
              CONCAT(pr.pr_nombres, ' ', pr.pr_apellidos) as proveedor_nombre
@@ -127,25 +118,23 @@ const ModeloProducto = {
       LEFT JOIN proveedor pr ON p.p_proveedorFK = pr.pr_id
       WHERE p.p_categoria = ? ORDER BY p.p_nombre
     `;
-    db.query(query, [categoria], callback);
+    return db.execute(query, [categoria]);
   },
 
-  actualizarStock: (id, cantidad, callback) => {
+  actualizarStock: (id, cantidad) => {
     const query = 'UPDATE producto SET p_stock = p_stock + ? WHERE p_id = ?';
-    db.query(query, [cantidad, id], callback);
+    return db.execute(query, [cantidad, id]);
   },
 
-  // Verificar si el producto está en ventas
-  verificarUsoEnVentas: (id, callback) => {
+  verificarUsoEnVentas: (id) => {
     const query = 'SELECT COUNT(*) as count FROM venta WHERE v_idproducto = ?';
-    db.query(query, [id], callback);
+    return db.execute(query, [id]);
   },
 
-  // Verificar si el producto está en inventario
-  verificarUsoEnInventario: (id, callback) => {
+  verificarUsoEnInventario: (id) => {
     const query = 'SELECT COUNT(*) as count FROM inventario WHERE i_idproductofk = ?';
-    db.query(query, [id], callback);
+    return db.execute(query, [id]);
   }
 };
 
-module.exports = ModeloProducto;
+module.exports = ModeloProductoPromises;
