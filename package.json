@@ -6,7 +6,6 @@
   "scripts": {
     "start": "node servidor.js",
     "dev": "nodemon servidor.js",
-    "prod": "NODE_ENV=production node servidor.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
