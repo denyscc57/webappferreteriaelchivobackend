@@ -24,11 +24,10 @@ import rutaUnidadMedida from './rutas/RutaUnidadMedida.js';
 import rutaCaja from './rutas/RutaCaja.js';
 import rutaReportes from './rutas/RutaReportes.js';
 
-// Middleware CORS configurado correctamente
+// Middleware CORS
 app.use(cors({
-  //origin: 'http://localhost:3000',
-  origin: true,
-  credentials: true,
+  origin: 'http://localhost:3000',
+  credentials: true, 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
